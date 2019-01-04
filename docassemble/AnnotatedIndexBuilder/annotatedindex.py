@@ -1,16 +1,40 @@
-from docassemble.base.core import DAObject, DAList
+from docassemble.base.core import DAObject, DAList, DAFile
+from docassemble.base.util import pdf_concatenate
 import pycountry
 
 def countries():
-    return [country.name for country in pycountry.countries]
+    return sorted([country.name for country in pycountry.countries])
 
-def personal_characteristics():
+def grounds():
     return [
-        'religious persecution',
-        'sexual orientation',
-        'domestic violence',
-        'ethnic persecution',
-        'gang violence'
+        'Race',
+        'Political Opinion',
+        'Religion',
+        'Nationality',
+        'Particular Social Group'
+    ]
+
+def subgrounds():
+    return [
+        'gender',
+        'DV status',
+        'children',
+        'gang-related violence',
+        'membership in a family/social group'
+    ]
+
+def harms():
+    return [
+        'physical violence',
+        'torture',
+        'genocide',
+        'slavery',
+        'threats of harm',
+        'unlawful detention',
+        'infliction of mental, emotional, or psychological harm',
+        'substantial economic discrimination or harm',
+        'other discrimination or harassment',
+        'other violations of human rights'
     ]
 
 class AISearcher(DAObject):
@@ -18,26 +42,40 @@ class AISearcher(DAObject):
     Initial version should work with SharePoint Online"""
     def init(self, *pargs, **kwargs):
         super(AISearcher, self).init(*pargs, **kwargs)
-    def matches(date_after=None,date_before=None,characteristics=None,country=None,any=False):
+    def matches(self,date_after=None,date_before=None,characteristics=None,country=None,any=False):
         """Return a list of articles that match any or all of the specified filters"""
         pass
 
 class AIArticle(DAObject):
     """A single item (article) used to document an asylee's claim"""
-
+    def date_range(self):
+        return (self.start_date,self.end_date)
+    def characteristics(self):
+        return self._characteristics
+    def country(self):
+        return self._country
+    def set(self,file):
+        """Set the file object"""
+        if isinstance(file,DAFile):
+            self.file = file
+    def get(self):
+        return self.file
     def as_pdf(self):
         """Returns a DAFile that represents the article in PDF format, regardless of source format"""
-        pass
+        if isinstance(self.file,DAFile):
+            return self.file
+        else:
+            return self.file
 
 class AnnotatedIndex(DAList):
-    """A collection of articles and other documents to support an asylee's claim"""
+    """A collection of articles and other documents to support an asylee's claim (dossier or annotated index)"""
     def init(self, *pargs, **kwargs):
         super(AnnotatedIndex, self).init(*pargs, **kwargs) 
         self.object_type = AIArticle
 
     def as_pdf(self):
-        """Returns a concatenated PDF that represents the completed index"""
-        pass
+        """Returns a concatenated PDF that represents the completed annotated index"""
+        return pdf_concatenate([file.as_pdf()  for file in self.elements])
 
     def toc(self):
         """Returns a Microsoft Word Document with a table of contents for the index"""

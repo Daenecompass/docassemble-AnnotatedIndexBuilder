@@ -1,0 +1,76 @@
+---
+metadata:
+  title: |
+    Annotated Index Builder
+  short title: |
+    Annotated Index
+  description: |
+    This interview produces an Annotated Index for HIRC.
+  authors:
+    - name: Quinten Steenhuis
+      organization: Greater Boston Legal Services
+    - name: Micah-Shalom Kesselman
+      organization: Massachusetts Legal Hackers
+  revision_date: 2019-01-03
+  documentation: "https://docassemble.org/docs/initial.html#metadata"  
+---
+modules:
+  - .annotatedindex
+  - docassemble.base.util
+---
+objects:
+  - MyIndex: AnnotatedIndex
+---
+imports:
+  - glob
+---
+code: |
+  (path, mimetype) = path_and_mimetype("data/static/")
+  dirlist = glob.glob(path + '*.pdf')
+---
+mandatory: True
+comment: |
+  Question order
+code: |
+  intro
+  search_parameters
+  documents
+---
+question: |
+  Welcome to the Annotated Index Builder
+field: intro
+---
+question: |
+  What kind of annotation are you looking for?
+fields:
+  - Country: country
+    code: |
+      countries()
+  - Start date: start_date
+    datatype: date
+  - Ending date: end_date
+    datatype: date
+  - Grounds of persecution: grounds
+    none of the above: False
+    datatype: checkboxes
+    code: |
+      grounds()
+  - Sub-grounds: subgrounds
+    none of the above: False  
+    datatype: checkboxes
+    code: |
+      subgrounds()
+  - Harms: harms
+    none of the above: False  
+    datatype: checkboxes
+    code: |
+      harms()
+continue button field: search_parameters 
+---
+question: |
+  Select the files you want to include
+fields:
+  - Documents to include: documents
+    datatype: checkboxes
+    code: |
+      dirlist
