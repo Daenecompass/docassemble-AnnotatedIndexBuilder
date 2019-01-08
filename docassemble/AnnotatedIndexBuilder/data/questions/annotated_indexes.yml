@@ -11,8 +11,15 @@ metadata:
       organization: Greater Boston Legal Services
     - name: Micah-Shalom Kesselman
       organization: Massachusetts Legal Hackers
+    - name: Jack Haycock
+      organization: Pine Tree Legal Assistance
+    - name: Alisha Robinson
+      
   revision_date: 2019-01-08
   documentation: "https://docassemble.org/docs/initial.html#metadata"  
+---
+features:
+  default icons: material icons
 ---
 modules:
   - .annotatedindex
@@ -21,10 +28,11 @@ modules:
 objects:
   - dossier: AnnotatedIndex.using(auto_gather=False)
   #- searcher: DAList.using(object_type=AIArticle)
-  - searcher: AISearcher
+  #- searcher: AISearcher
+  - csv_searcher: CSVSearcher.using(csv_file='data/sources/annotated_index_source_index.csv')
   - client: Individual
   - advocate: Individual
-  - web_articles: AIWebArticleList
+  - web_articles: AIWebArticleList.using(complete_attribute='url')
 ---
 imports:
   - glob
@@ -50,10 +58,10 @@ comment: |
   Question order
 code: |
   intro
-  #advocate.name.first
-  #client.name.first
-  #search_parameters
-  searcher.gathered
+  advocate.name.first
+  client.name.first
+  search_parameters
+  #searcher.gathered
   documents
   web_articles.added
   review_dossier
@@ -61,6 +69,10 @@ code: |
 ---
 question: |
   Welcome to the Annotated Index Builder
+subquestion: |
+  This tool will help you build an appendix and table of contents for your appendix.
+  
+  You can choose files from our library and add new ones.
 field: intro
 ---
 question: |
@@ -89,30 +101,25 @@ fields:
 question: |
   Search Criteria
 fields:
-  - Country: country
+  - Location: location
     code: |
-      countries()
+      location()
   - Start date: start_date
     datatype: date
     required: False
   - Ending date: end_date
     datatype: date
     required: False
-  - Grounds of persecution: grounds
+  - Protected class: grounds
     none of the above: False
     datatype: checkboxes
     code: |
-      grounds()
-  - Sub-grounds: subgrounds
+      protected_class()
+  - Type of resource: resource_type
     none of the above: False  
     datatype: checkboxes
     code: |
-      subgrounds()
-  - Harms: harms
-    none of the above: False  
-    datatype: checkboxes
-    code: |
-      harms()
+      document_type()
 continue button field: search_parameters 
 ---
 question: |
@@ -126,13 +133,23 @@ fields:
     datatype: date
 ---
 question: |
+  Edit Article
+fields:
+  - Title: csv_searcher[i].title
+  - Citation: csv_searcher[i].citation
+  - Annotation: csv_searcher[i].annotation
+    datatype: area
+  - Date: csv_searcher[i].date
+    datatype: date
+---
+question: |
   Select the files you want to include
 fields:
   - Documents to include: documents
     datatype: object_checkboxes
     object labeler: |
-      lambda y: y.title
-    choices: searcher.elements
+      lambda y: '**'+ y.title + '**, ' + y.citation
+    choices: csv_searcher.elements
 ---
 code: |
   for article in documents:
@@ -144,6 +161,8 @@ rows: dossier
 columns:
   - Title: |
       row_item.title
+  - Citation: |
+      row_item.citation
 edit:
   - title
 ---
@@ -172,6 +191,9 @@ code: |
     article.title = web.title
     web.save_pdf()
     article.file = web.file
+    article.citation = web.url
+    article.annotation = web.annotation
+    article.date = web.date
     dossier.append(article)
   web_articles.added = True    
 ---
@@ -182,16 +204,21 @@ subquestion: |
   ${dossier.add_action()}
 field: review_dossier  
 ---
-event: unused_download
-question: |
-  Your file is ready
-subquestion: |
-  Download the file: ${pdf_concatenate([article.file for article in searcher.elements])}
+attachment:
+  - name: Annotated Index
+    variable name: annotated_index  
+    filename: annotated_index
+    docx template file: annotated_index.docx
 ---
 event: download
 question: |
   Your file is ready
 subquestion: |
-  Download the file: 
   
-  ${dossier.as_pdf()}  
+  ### Download PDF
+  :file-pdf: ${dossier.as_pdf()}  
+  
+  ### Download Word Annotations and Index
+  :file-word: ${annotated_index}
+  
+  
