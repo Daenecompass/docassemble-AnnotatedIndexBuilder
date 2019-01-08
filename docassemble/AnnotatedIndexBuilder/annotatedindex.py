@@ -37,14 +37,20 @@ def harms():
         'other violations of human rights'
     ]
 
-class AISearcher(DAObject):
+class AISearcher(DAList):
     """An abstract interface that allows you to retrieve articles for creating an annotated index. 
     Initial version should work with SharePoint Online"""
     def init(self, *pargs, **kwargs):
         super(AISearcher, self).init(*pargs, **kwargs)
+        #self.elements = list()
     def matches(self,date_after=None,date_before=None,characteristics=None,country=None,any=False):
         """Return a list of articles that match any or all of the specified filters"""
         pass
+    #def append(self,item):
+    #    self.elements.append(item)
+
+    #def list_all(self):
+    #    return self.elements
 
 class AIArticle(DAObject):
     """A single item (article) used to document an asylee's claim"""
@@ -66,6 +72,11 @@ class AIArticle(DAObject):
             return self.file
         else:
             return self.file
+    def  __unicode__(self):
+        return self.title
+
+    def __str__(self):
+        return self.__unicode__()
 
 class AnnotatedIndex(DAList):
     """A collection of articles and other documents to support an asylee's claim (dossier or annotated index)"""
@@ -75,8 +86,8 @@ class AnnotatedIndex(DAList):
 
     def as_pdf(self):
         """Returns a concatenated PDF that represents the completed annotated index"""
-        return pdf_concatenate([file.as_pdf()  for file in self.elements])
+        return pdf_concatenate([article.file  for article in self])
 
     def toc(self):
         """Returns a Microsoft Word Document with a table of contents for the index"""
-        pass
+        pass        

@@ -11,7 +11,7 @@ metadata:
       organization: Greater Boston Legal Services
     - name: Micah-Shalom Kesselman
       organization: Massachusetts Legal Hackers
-  revision_date: 2019-01-03
+  revision_date: 2019-01-07
   documentation: "https://docassemble.org/docs/initial.html#metadata"  
 ---
 modules:
@@ -19,37 +19,83 @@ modules:
   - docassemble.base.util
 ---
 objects:
-  - MyIndex: AnnotatedIndex
+  - dossier: AnnotatedIndex.using(auto_gather=False)
+  #- searcher: DAList.using(object_type=AIArticle)
+  - searcher: AISearcher
+  - client: Individual
+  - advocate: Individual
 ---
 imports:
   - glob
+  - os
 ---
 code: |
-  (path, mimetype) = path_and_mimetype("data/static/")
+  path = path_and_mimetype("data/static/")[0]
   dirlist = glob.glob(path + '*.pdf')
+  # files = []
+  for pdf in dirlist:
+    pdf_basename = os.path.basename(pdf)
+    title = os.path.splitext(pdf_basename)[0]
+    # article = AIArticle()
+    article = searcher.appendObject()
+    article.filename = pdf_basename
+    article.file = DAStaticFile(filename=pdf_basename)
+    article.title = title.replace('_',' ')
+    searcher.append(article)
+  searcher.gathered = True
 ---
 mandatory: True
 comment: |
   Question order
 code: |
   intro
-  search_parameters
+  #advocate.name.first
+  #client.name.first
+  #search_parameters
+  searcher.gathered
   documents
+  review_dossier
+  download
 ---
 question: |
   Welcome to the Annotated Index Builder
 field: intro
 ---
 question: |
-  What kind of annotation are you looking for?
+  Advocate
+fields:
+  - First name: advocate.name.first
+  - Last name: advocate.name.last
+  - Program: program
+    default: GBLS
+    choices:
+      - GBLS
+---
+question: |
+  Client's Name
+fields:
+  - First name: client.name.first
+  - Last name: client.name.last
+---
+question: |
+  Court 
+fields: 
+  - Court name: court_name
+    choices:
+      - Boston Court
+---
+question: |
+  Search Criteria
 fields:
   - Country: country
     code: |
       countries()
   - Start date: start_date
     datatype: date
+    required: False
   - Ending date: end_date
     datatype: date
+    required: False
   - Grounds of persecution: grounds
     none of the above: False
     datatype: checkboxes
@@ -71,6 +117,39 @@ question: |
   Select the files you want to include
 fields:
   - Documents to include: documents
-    datatype: checkboxes
-    code: |
-      dirlist
+    datatype: object_checkboxes
+    object labeler: |
+      lambda y: y.title
+    choices: searcher.elements
+---
+code: |
+  for article in documents:
+    dossier.append(article)
+  dossier.gathered = True
+---
+table: dossier.table
+rows: dossier
+columns:
+  - Title: |
+      row_item.title
+edit:
+  - title
+---
+question: |
+  Review the dossier
+subquestion: |
+  ${dossier.table}
+  ${dossier.add_action()}
+field: review_dossier  
+---
+event: unused_download
+question: |
+  Your file is ready
+subquestion: |
+  Download the file: ${pdf_concatenate([article.file for article in searcher.elements])}
+---
+event: download
+question: |
+  Your file is ready
+subquestion: |
+  Download the file: ${dossier.as_pdf()}  
