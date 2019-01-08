@@ -11,7 +11,7 @@ metadata:
       organization: Greater Boston Legal Services
     - name: Micah-Shalom Kesselman
       organization: Massachusetts Legal Hackers
-  revision_date: 2019-01-07
+  revision_date: 2019-01-08
   documentation: "https://docassemble.org/docs/initial.html#metadata"  
 ---
 modules:
@@ -24,6 +24,7 @@ objects:
   - searcher: AISearcher
   - client: Individual
   - advocate: Individual
+  - web_articles: AIWebArticleList
 ---
 imports:
   - glob
@@ -54,6 +55,7 @@ code: |
   #search_parameters
   searcher.gathered
   documents
+  web_articles.added
   review_dossier
   download
 ---
@@ -114,6 +116,16 @@ fields:
 continue button field: search_parameters 
 ---
 question: |
+  Edit Article
+fields:
+  - Title: searcher[i].title
+  - Citation: searcher[i].citation
+  - Annotation: searcher[i].annotation
+    datatype: area
+  - Date: searcher[i].date
+    datatype: date
+---
+question: |
   Select the files you want to include
 fields:
   - Documents to include: documents
@@ -136,6 +148,34 @@ edit:
   - title
 ---
 question: |
+  Would you like to add an article from the Internet?
+yesno: web_articles.there_are_any
+---
+question: |
+  Would you like to add another article from the Internet?
+yesno: web_articles.there_is_another
+---
+question: |
+  Internet Article
+fields:
+  - URL: web_articles[i].url
+  - Title: web_articles[i].title
+  - Date: web_articles[i].date
+    datatype: date
+  - Annotation: web_articles[i].annotation
+    datatype: area
+---
+code: |
+  for web in web_articles:
+    #article = dossier.appendObject()
+    article = AIArticle()
+    article.title = web.title
+    web.save_pdf()
+    article.file = web.file
+    dossier.append(article)
+  web_articles.added = True    
+---
+question: |
   Review the dossier
 subquestion: |
   ${dossier.table}
@@ -152,4 +192,6 @@ event: download
 question: |
   Your file is ready
 subquestion: |
-  Download the file: ${dossier.as_pdf()}  
+  Download the file: 
+  
+  ${dossier.as_pdf()}  

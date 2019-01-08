@@ -1,6 +1,8 @@
-from docassemble.base.core import DAObject, DAList, DAFile
+from docassemble.base.core import DAObject, DAList, DAFile, DAStaticFile
 from docassemble.base.util import pdf_concatenate
+from docassemble.base.functions import space_to_underscore
 import pycountry
+import pdfkit
 
 def countries():
     return sorted([country.name for country in pycountry.countries])
@@ -90,4 +92,18 @@ class AnnotatedIndex(DAList):
 
     def toc(self):
         """Returns a Microsoft Word Document with a table of contents for the index"""
-        pass        
+        pass
+
+class AIWebArticle(DAObject):
+    def init(self, *pargs, **kwargs):
+        super(AIWebArticle, self).init(*pargs, **kwargs)
+        self.file = DAFile()
+    def save_pdf(self):
+        # self.file = DAFile()
+        self.file.initialize(filename=space_to_underscore(self.title + '.pdf'))
+        pdfkit.from_url(self.url, self.file.path())
+
+class AIWebArticleList(DAList):
+  def init(self, *pargs, **kwargs):                  
+    super(AIWebArticleList, self).init(*pargs, **kwargs)         
+    self.object_type = AIWebArticle

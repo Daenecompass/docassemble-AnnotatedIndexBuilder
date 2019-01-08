@@ -45,9 +45,9 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.AnnotatedIndexBuilder',
-      version='0.0.4',
+      version='0.0.5',
       description=('A docassemble extension.'),
-      long_description='# docassemble.AnnotatedIndexBuilder\r\n\r\nA docassemble extension.\r\n\r\n## Author\r\n\r\nQuinten Steenhuis, admin@admin.com\r\n\r\n',
+      long_description="# docassemble.AnnotatedIndexBuilder\r\n\r\nA docassemble extension.\r\n\r\n## Author\r\n\r\nQuinten Steenhuis, admin@admin.com\r\n\r\nNote: may need to manually install the latest binary of [wkhtmltopdf](https://github.com/wkhtmltopdf/wkhtmltopdf/releases/tag/0.12.4)\r\nAs the Debian package version has a bug when run in headless mode.\r\n\r\nUpgrading the Debian version may resolve -- haven't tested yet.",
       long_description_content_type='text/markdown',
       author='Quinten Steenhuis',
       author_email='admin@admin.com',
